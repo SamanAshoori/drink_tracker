@@ -3,7 +3,7 @@
 
   async function checkBackend() {
     try {
-      const res = await fetch('http://127.0.0.1:8000/');
+      const res = await fetch('http://127.0.0.1:8000/api/brands');
       const data = await res.json();
       status = `Backend says: ${data.message}`;
     } catch (e) {
