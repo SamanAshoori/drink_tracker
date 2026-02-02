@@ -13,3 +13,22 @@ class Brand(BrandBase):
 
     class Config:
         from_attributes = True
+
+# Model for creating a new drink 
+class DrinkBase(BaseModel):
+    flavour: str
+    size_ml: int
+    caffeine_mg: int
+
+class DrinkCreate(DrinkBase):
+    brand_id: int
+
+class Drink(DrinkBase):
+    id: int
+    brand_id: int
+    caffeine_per_100ml: float
+    brand_name:str
+    display_name:str
+
+    class Config:
+        from_attributes = True

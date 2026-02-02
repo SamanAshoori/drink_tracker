@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from dotenv import load_dotenv
-from schemas import Brand
+from schemas import Brand, Drink, DrinkCreate
 
 # 1. Load env vars
 load_dotenv()
@@ -40,3 +40,43 @@ def get_brands():
     
     # Supabase returns data in response.data
     return response.data
+
+@app.get("/api/drinks", response_model=list[Drink])
+def get_drinks():
+    drinks_response = supabase.table("drinks").select("*").execute()
+    drink_data = drinks_response.data
+
+    brands_response = supabase.table("brands").select("*").execute()
+    brand_map = {brand['id']: brand['name'] for brand in brands_response.data}
+    results = []
+
+    for drink in drink_data:
+        brand_name = brand_map.get(drink['brand_id'], "Unknown Brand")
+        #get display name
+        display_name = f"{brand_name} {drink['flavour']} {drink['size_ml']}ml"
+        #Add computed fields to the dict
+        drink['brand_name'] = brand_name
+        drink['display_name'] = display_name
+        results.append(drink)
+
+    return results
+
+@app.post("/api/drinks", response_model=Drink)
+def create_drink(drink: DrinkCreate):
+    #convert pydantic model to dict
+    data_to_insert = drink.dict()
+
+    #insert to supabase
+    response = supabase.table("drinks").insert(data_to_insert).execute()
+    
+    # Supabase fetches the created record to return
+    created_drink = response.data[0]
+
+    # Fetch brand name for the created drink
+    brand_response = supabase.table("brands").select("name").eq("id", created_drink["brand_id"]).execute()
+    brand_name = brand_response.data["name"]
+
+    created_drink['brand_name'] = brand_name
+    created_drink['display_name'] = f"{brand_name} {created_drink['flavour']} {created_drink['size_ml']}ml"
+
+    return created_drink
