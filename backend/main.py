@@ -81,3 +81,15 @@ def create_drink(drink: DrinkCreate):
     created_drink['display_name'] = f"{brand_name} {created_drink['flavour']} {created_drink['size_ml']}ml"
 
     return created_drink
+
+@app.post("/api/brands", response_model=Brand)
+def create_brand(brand: Brand):
+    #convert pydantic model to dict
+    data_to_insert = brand.dict()
+
+    #insert to supabase
+    response = supabase.table("brands").insert(data_to_insert).execute()
+    
+    # Supabase fetches the created record to return
+    created_brand = response.data[0]
+    return created_brand 
