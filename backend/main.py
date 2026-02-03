@@ -5,17 +5,18 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 from schemas import Brand, Drink, DrinkCreate
 
-# 1. Load env vars
+# load environment variables from .env file
 load_dotenv()
 
+# Supabase config
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 
-# 2. Check if keys exist (Early fail if config is wrong)
+#quick validation
 if not url or not key:
     raise ValueError("Missing SUPABASE_URL or SUPABASE_KEY in .env file")
 
-# 3. Initialize Supabase
+#create supabase client
 supabase: Client = create_client(url, key)
 
 app = FastAPI()
