@@ -40,3 +40,9 @@ class ConsumptionBase(BaseModel):
 
 class consumptionCreate(ConsumptionBase):
     pass
+
+class Consumption(ConsumptionBase):
+    id: int
+    drink: Drink
+    class Config:
+        from_attributes = True 
