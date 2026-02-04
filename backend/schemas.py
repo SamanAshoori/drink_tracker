@@ -32,3 +32,11 @@ class Drink(DrinkBase):
 
     class Config:
         from_attributes = True
+
+class ConsumptionBase(BaseModel):
+    drink_id: int
+    quantity_ml: int
+    consumed_at: datetime
+
+class consumptionCreate(ConsumptionBase):
+    pass
