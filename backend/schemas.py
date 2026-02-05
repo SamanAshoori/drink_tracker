@@ -36,14 +36,13 @@ class Drink(DrinkBase):
 
 class ConsumptionBase(BaseModel):
     drink_id: int
-    quantity_ml: int
-    consumed_at: datetime
 
 class consumptionCreate(ConsumptionBase):
     pass
 
 class Consumption(ConsumptionBase):
     id: int
-    drink: Drink
+    consumed_at: datetime
+    drink_display_name: str
     class Config:
         from_attributes = True 
