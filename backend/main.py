@@ -64,8 +64,16 @@ def get_drinks():
 
 @app.post("/api/drinks", response_model=Drink)
 def create_drink(drink: DrinkCreate):
+    #calc total caffeine content
+    total_caffeine_mg = int((drink.caffeine_per_100ml * drink.size_ml) / 100)
     #convert pydantic model to dict
-    data_to_insert = drink.dict()
+    data_to_insert = {
+        "brand_id": drink.brand_id, 
+        "flavour": drink.flavour, 
+        "size_ml": drink.size_ml,
+        "caffeine_mg": total_caffeine_mg
+    }
+    
 
     #insert to supabase
     response = supabase.table("drinks").insert(data_to_insert).execute()

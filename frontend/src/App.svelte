@@ -9,8 +9,8 @@
   // Form Data
   let selectedBrandId = "";
   let flavour = "";
-  let size = 330;
-  let caffeine = 100;
+  let size = 250;
+  let caffeinedensity = 32; // Red Bull has ~32mg/100ml
 
   // Load data on startup
   onMount(async () => {
@@ -36,7 +36,7 @@
       brand_id: parseInt(selectedBrandId),
       flavour: flavour,
       size_ml: size,
-      caffeine_mg: caffeine
+      caffeine_per_100ml: caffeinedensity
     };
 
     const res = await fetch('http://127.0.0.1:8000/api/drinks', {
@@ -95,7 +95,7 @@
 
       <div class="row">
         <label>Size (ml): <input type="number" bind:value={size} /></label>
-        <label>Caffeine (mg): <input type="number" bind:value={caffeine} /></label>
+        <label>Caffeine (mg/100ml): <input type="number" bind:value={caffeinedensity} /></label>
       </div>
 
       <button type="submit">Add Drink</button>
