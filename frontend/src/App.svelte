@@ -54,13 +54,13 @@
   }
 
   async function loadHistory() {
-    const res = await fetch('http://127.0.0.1:8000/api/consumption');
+    const res = await fetch('http://127.0.0.1:8000/api/consumptions');
     history = await res.json();
   }
 
   async function logDrink(drinkId) {
     const payload = { drink_id: drinkId };
-    const res = await fetch('http://127.0.0.1.8000/api/consumption', {
+    const res = await fetch('http://127.0.0.1.8000/api/consumptions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
