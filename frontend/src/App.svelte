@@ -127,8 +127,8 @@
       <ul>
         {#each history as entry}
           <li>
-            {entry.drink.display_name}
-            <small> - {new Date(entry.timestamp).toLocaleString()}</small>
+            {entry.drink_display_name}
+            <small> - {new Date(entry.consumed_at).toLocaleString()}</small>
           </li>
         {/each}
       </ul>
