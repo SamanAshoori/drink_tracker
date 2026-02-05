@@ -94,12 +94,12 @@ def create_brand(brand: Brand):
     created_brand = response.data[0]
     return created_brand 
 
-@app.post("/api/consumption", response_model=Consumption)
+@app.post("/api/consumptions", response_model=Consumption)
 def log_consumption(consumption: consumptionCreate):
     #convert pydantic model to dict
     data_to_insert = consumption.dict()
 
-    result = supabase.table("consumption").insert(data_to_insert).execute()
+    result = supabase.table("consumptions").insert(data_to_insert).execute()
     new_consumption = result.data[0]
 
     drink_res = supabase.table("drinks").select("*, brands(name)").eq("id", new_consumption["drink_id"]).single().execute()
@@ -112,9 +112,9 @@ def log_consumption(consumption: consumptionCreate):
 
     return new_consumption
 
-@app.get("/api/consumption", response_model=list[Consumption])
+@app.get("/api/consumptions", response_model=list[Consumption])
 def get_consumptions():
-    result = supabase.table("consumption").select("*, drinks(*, brands(name))").order("consumed_at", desc=True).limit(10).execute()
+    result = supabase.table("consumptions").select("*, drinks(*, brands(name))").order("consumed_at", desc=True).limit(10).execute()
 
     results = []
     for record in result.data:
