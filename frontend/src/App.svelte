@@ -4,6 +4,7 @@
   // State
   let brands = [];
   let drinks = [];
+  let history = [];
   
   // Form Data
   let selectedBrandId = "";
@@ -15,6 +16,7 @@
   onMount(async () => {
     await loadBrands();
     await loadDrinks();
+    await loadHistory();
   });
 
   async function loadBrands() {
@@ -50,6 +52,25 @@
       alert("Error saving drink");
     }
   }
+
+  async function loadHistory() {
+    const res = await fetch('http://127.0.0.1:8000/api/consumption');
+    history = await res.json();
+  }
+
+  async function logDrink(drinkId) {
+    const payload = { drink_id: drinkId };
+    const res = await fetch('http://127.0.0.1.8000/api/consumption', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      await loadHistory();
+    } else {
+      alert("Error logging drink");
+    }
+    }
 </script>
 
 <main>
@@ -91,6 +112,23 @@
           <li>
             <strong>{drink.display_name}</strong> 
             <small>({drink.caffeine_per_100ml}mg/100ml)</small>
+            <button on:click={() => logDrink(drink.id)} style="margin-left: 1rem;">Log Drink</button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
+
+  <div class="card">
+    <h2>Consumption History</h2>
+    {#if history.length === 0}
+      <p>No drinks logged yet.</p>
+    {:else}
+      <ul>
+        {#each history as entry}
+          <li>
+            {entry.drink.display_name}
+            <small> - {new Date(entry.timestamp).toLocaleString()}</small>
           </li>
         {/each}
       </ul>
