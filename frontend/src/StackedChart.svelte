@@ -50,6 +50,11 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+
+                interaction: {
+                    mode: "index",
+                    intersect: false,
+                },
                 scales: {
                     x: { stacked: true },
                     y: {
@@ -63,12 +68,11 @@
                 },
                 plugins: {
                     tooltip: {
+                        displayColors: true,
                         backgroundColor: "rgba(0,0,0,0.7)",
 
                         callbacks: {
-                            title: function (context) {
-                                return "Date: " + context[0].label;
-                            },
+                            // Format the individual rows (e.g., "Red Bull: £1.50")
                             label: function (context) {
                                 let label = context.dataset.label || "";
                                 if (label) {
@@ -85,10 +89,14 @@
 
                             footer: function (tooltipItems) {
                                 let sum = 0;
+
+                                // Because interaction mode is 'index', tooltipItems contains
+                                // data for every drink on this day, not just the one you hovered.
                                 tooltipItems.forEach(function (tooltipItem) {
                                     sum += tooltipItem.parsed.y;
                                 });
-                                return "Total Spent £: " + sum.toFixed(2);
+
+                                return "Day Total: £" + sum.toFixed(2);
                             },
                         },
                     },
