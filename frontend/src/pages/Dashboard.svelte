@@ -46,12 +46,10 @@
   </div>
 </div>
 
-<div class="grid">
   <div class="card">
     <h2>Spending History</h2>
     {#if stackedData.length > 0} <StackedChart data={stackedData} /> {/if}
   </div>
-</div>
 
 <div class="card">
   <h2>Recent History</h2>

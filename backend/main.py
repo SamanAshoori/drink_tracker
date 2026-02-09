@@ -1,9 +1,20 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header , Depends
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from schemas import Brand, Drink, DrinkCreate, consumptionCreate, Consumption, AllTimeStats
+
+# Security Dependency
+def verify_admin(x_admin_key: str = Header(default=None)):
+    secret = os.environ.get("ADMIN_SECRET")
+
+    # If no secret is set on the server, we might want to fail safe
+    if not secret:
+        raise HTTPException(status_code=500, detail="Server misconfigured: No Admin Secret")
+
+    if x_admin_key != secret:
+        raise HTTPException(status_code=401, detail="Unauthorized: Wrong Admin Key")
 
 # load environment variables from .env file
 load_dotenv()
@@ -62,7 +73,7 @@ def get_drinks():
 
     return results
 
-@app.post("/api/drinks", response_model=Drink)
+@app.post("/api/drinks", response_model=Drink, dependencies=[Depends(verify_admin)])
 def create_drink(drink: DrinkCreate):
     #calc total caffeine content
     total_caffeine_mg = int((drink.caffeine_per_100ml * drink.size_ml) / 100)
@@ -90,7 +101,7 @@ def create_drink(drink: DrinkCreate):
 
     return created_drink
 
-@app.post("/api/brands", response_model=Brand)
+@app.post("/api/brands", response_model=Brand, dependencies=[Depends(verify_admin)])
 def create_brand(brand: Brand):
     #convert pydantic model to dict
     data_to_insert = brand.dict()
@@ -102,7 +113,7 @@ def create_brand(brand: Brand):
     created_brand = response.data[0]
     return created_brand 
 
-@app.post("/api/consumptions", response_model=Consumption)
+@app.post("/api/consumptions", response_model=Consumption, dependencies=[Depends(verify_admin)])
 def log_consumption(consumption: consumptionCreate):
     #convert pydantic model to dict
     data_to_insert = consumption.dict()
@@ -206,3 +217,4 @@ def get_stacked_chart():
         results.append(row)
         
     return results
+

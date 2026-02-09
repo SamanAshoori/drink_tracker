@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
 
   let drinks = [];
+  let adminPassword = ""; // Session password for logging
 
   onMount(async () => {
     const res = await fetch('http://127.0.0.1:8000/api/drinks');
@@ -10,6 +11,11 @@
   });
 
   async function logDrink(drink) {
+    if (!adminPassword) {
+        alert("Please enter the Admin Password at the top first.");
+        return;
+    }
+
     const payload = { 
       drink_id: drink.id,
       price_paid: drink.log_price
@@ -17,23 +23,34 @@
     
     const res = await fetch('http://127.0.0.1:8000/api/consumptions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': adminPassword // Send header
+      },
       body: JSON.stringify(payload)
     });
 
     if (res.ok) {
-      alert("Logged " + drink.display_name);
+      alert("Logged: " + drink.display_name);
+    } else if (res.status === 401) {
+      alert("Wrong Admin Password!");
     } else {
       alert("Error logging drink");
     }
   }
 </script>
 
+<div class="card password-card">
+  <label>
+      🔒 Session Password:
+      <input type="password" bind:value={adminPassword} placeholder="Required to log drinks..." />
+  </label>
+</div>
+
 <div class="card">
   <h2>Log a Drink</h2>
-  <p class="subtitle">Select a drink from your library to log it.</p>
   {#if drinks.length === 0}
-    <p>No drinks found. Go to Admin to add some!</p>
+    <p>No drinks found.</p>
   {:else}
     <ul>
       {#each drinks as drink}
@@ -62,10 +79,11 @@
 
 <style>
   .card { border: 1px solid #ddd; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }
-  .subtitle { color: #666; margin-bottom: 1rem; }
+  .password-card { background-color: #f8f9fa; border-left: 5px solid #333; }
   .drink-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
   .drink-actions { display: flex; align-items: center; gap: 5px; }
   .price-input { width: 70px; padding: 5px; margin: 0 !important; }
   button { background: #000; color: #fff; border: none; padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; }
   ul { padding-left: 0; list-style: none; }
+  input { padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
 </style>
