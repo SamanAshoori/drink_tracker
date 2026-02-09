@@ -38,7 +38,7 @@ class ConsumptionBase(BaseModel):
     drink_id: int
 
 class consumptionCreate(ConsumptionBase):
-    pass
+    price_paid: float = 0.0 # default to 0 if not provided
 
 class Consumption(ConsumptionBase):
     id: int

@@ -30,7 +30,10 @@
 
   async function loadDrinks() {
     const res = await fetch('http://127.0.0.1:8000/api/drinks');
-    drinks = await res.json();
+    const rawData = await res.json();
+
+    //add temp log price
+    drinks = rawData.map(x => ({...x,log_price:0.0}));
   }
 
   async function handleSubmit() {
@@ -60,8 +63,14 @@
     history = await res.json();
   }
 
-  async function logDrink(drinkId) {
-    const payload = { drink_id: drinkId };
+  async function logDrink(drink) 
+  {
+    const payload = 
+    { 
+      drink_id: drink.id,
+      price_paid: drink.log_price || 0.0 // Use log_price if set, otherwise default to 0
+
+    };
     const res = await fetch('http://127.0.0.1:8000/api/consumptions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -117,10 +126,23 @@
     {:else}
       <ul>
         {#each drinks as drink}
-          <li>
-            <strong>{drink.display_name}</strong> 
-            <small>({drink.caffeine_per_100ml}mg/100ml)</small>
-            <button on:click={() => logDrink(drink.id)} style="margin-left: 1rem;">Log Drink</button>
+          <li class="drink-row">
+            <div class="drink-info">
+              <strong>{drink.display_name}</strong> 
+              <small>({drink.caffeine_per_100ml}mg/100ml)</small>
+            </div>
+            
+            <div class="drink-actions">
+              <span class="currency-symbol">£</span>
+              <input 
+                type="number" 
+                step="0.01" 
+                bind:value={drink.log_price} 
+                class="price-input" 
+                placeholder="0.00"
+              />
+              <button on:click={() => logDrink(drink)}>Log</button>
+            </div>
           </li>
         {/each}
       </ul>
@@ -168,4 +190,26 @@
   button { background: #000; color: #fff; border: none; padding: 0.75rem 1.5rem; cursor: pointer; border-radius: 4px; }
   ul { padding-left: 1.2rem; }
   li { margin-bottom: 0.5rem; }
+
+  .drink-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+  }
+  .drink-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .price-input {
+    width: 70px;
+    padding: 5px;
+    margin: 0 !important; /* Override global input margin */
+  }
+  .currency-symbol {
+    font-weight: bold;
+    color: #555;
+  }
 </style>
