@@ -1,12 +1,24 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
+  import StackedChart from "./StackedChart.svelte";
 
   // State
   let brands = [];
   let drinks = [];
   let history = [];
-  let stats = { total_ml: 0, total_caffeine: 0, total_count: 0, total_spent: 0.0 };
-  
+  let stats = {
+    total_ml: 0,
+    total_caffeine: 0,
+    total_count: 0,
+    total_spent: 0.0,
+  };
+  let StackedData = []; // This will hold the data for the stacked chart
+
+  async function loadStackedChart() {
+    const res = await fetch("http://127.0.0.1:8000/api/charts/stacked");
+    StackedData = await res.json();
+  }
+
   // Form Data
   let selectedBrandId = "";
   let flavour = "";
@@ -19,21 +31,22 @@
     await loadDrinks();
     await loadHistory();
     await loadStats();
+    await loadStackedChart();
   });
 
   async function loadBrands() {
-    const res = await fetch('http://127.0.0.1:8000/api/brands');
+    const res = await fetch("http://127.0.0.1:8000/api/brands");
     brands = await res.json();
     // Default to first brand if available
     if (brands.length > 0) selectedBrandId = brands[0].id;
   }
 
   async function loadDrinks() {
-    const res = await fetch('http://127.0.0.1:8000/api/drinks');
+    const res = await fetch("http://127.0.0.1:8000/api/drinks");
     const rawData = await res.json();
 
     //add temp log price
-    drinks = rawData.map(x => ({...x,log_price:0.0}));
+    drinks = rawData.map((x) => ({ ...x, log_price: 0.0 }));
   }
 
   async function handleSubmit() {
@@ -41,13 +54,13 @@
       brand_id: parseInt(selectedBrandId),
       flavour: flavour,
       size_ml: size,
-      caffeine_per_100ml: caffeinedensity
+      caffeine_per_100ml: caffeinedensity,
     };
 
-    const res = await fetch('http://127.0.0.1:8000/api/drinks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const res = await fetch("http://127.0.0.1:8000/api/drinks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
@@ -59,33 +72,31 @@
   }
 
   async function loadHistory() {
-    const res = await fetch('http://127.0.0.1:8000/api/consumptions');
+    const res = await fetch("http://127.0.0.1:8000/api/consumptions");
     history = await res.json();
   }
 
-  async function logDrink(drink) 
-  {
-    const payload = 
-    { 
+  async function logDrink(drink) {
+    const payload = {
       drink_id: drink.id,
-      price_paid: drink.log_price || 0.0 // Use log_price if set, otherwise default to 0
-
+      price_paid: drink.log_price || 0.0, // Use log_price if set, otherwise default to 0
     };
-    const res = await fetch('http://127.0.0.1:8000/api/consumptions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const res = await fetch("http://127.0.0.1:8000/api/consumptions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
       await loadHistory();
       await loadStats(); // Refresh stats
+      await loadStackedChart(); // Refresh stacked chart
     } else {
       alert("Error logging drink");
     }
-    }
+  }
 
   async function loadStats() {
-    const res = await fetch('http://127.0.0.1:8000/api/stats');
+    const res = await fetch("http://127.0.0.1:8000/api/stats");
     stats = await res.json();
   }
 </script>
@@ -94,10 +105,20 @@
   <h1>Drink Manager</h1>
 
   <div class="card">
+    <h2>Spending History</h2>
+    {#if StackedData.length > 0}
+      <StackedChart data={StackedData} />
+    {:else}
+      <p>No spending data available.</p>
+    {/if}
+  </div>
+
+  <div class="card">
     <h2>Add New Drink</h2>
     <form on:submit|preventDefault={handleSubmit}>
       <div class="row">
-        <label>Brand:
+        <label
+          >Brand:
           <select bind:value={selectedBrandId}>
             {#each brands as brand}
               <option value={brand.id}>{brand.name}</option>
@@ -105,14 +126,26 @@
           </select>
         </label>
       </div>
-      
+
       <div class="row">
-        <label>Flavour: <input type="text" bind:value={flavour} required placeholder="e.g. Tropical" /></label>
+        <label
+          >Flavour: <input
+            type="text"
+            bind:value={flavour}
+            required
+            placeholder="e.g. Tropical"
+          /></label
+        >
       </div>
 
       <div class="row">
         <label>Size (ml): <input type="number" bind:value={size} /></label>
-        <label>Caffeine (mg/100ml): <input type="number" bind:value={caffeinedensity} /></label>
+        <label
+          >Caffeine (mg/100ml): <input
+            type="number"
+            bind:value={caffeinedensity}
+          /></label
+        >
       </div>
 
       <button type="submit">Add Drink</button>
@@ -128,17 +161,17 @@
         {#each drinks as drink}
           <li class="drink-row">
             <div class="drink-info">
-              <strong>{drink.display_name}</strong> 
+              <strong>{drink.display_name}</strong>
               <small>({drink.caffeine_per_100ml}mg/100ml)</small>
             </div>
-            
+
             <div class="drink-actions">
               <span class="currency-symbol">£</span>
-              <input 
-                type="number" 
-                step="0.01" 
-                bind:value={drink.log_price} 
-                class="price-input" 
+              <input
+                type="number"
+                step="0.01"
+                bind:value={drink.log_price}
+                class="price-input"
                 placeholder="0.00"
               />
               <button on:click={() => logDrink(drink)}>Log</button>
@@ -182,14 +215,47 @@
 </main>
 
 <style>
-  main { max-width: 600px; margin: 0 auto; padding: 2rem; font-family: sans-serif; }
-  .card { border: 1px solid #ddd; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }
-  .row { margin-bottom: 1rem; display: flex; gap: 1rem; }
-  label { display: block; width: 100%; }
-  input, select { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
-  button { background: #000; color: #fff; border: none; padding: 0.75rem 1.5rem; cursor: pointer; border-radius: 4px; }
-  ul { padding-left: 1.2rem; }
-  li { margin-bottom: 0.5rem; }
+  main {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: sans-serif;
+  }
+  .card {
+    border: 1px solid #ddd;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+  }
+  .row {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+  }
+  label {
+    display: block;
+    width: 100%;
+  }
+  input,
+  select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+  }
+  button {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  ul {
+    padding-left: 1.2rem;
+  }
+  li {
+    margin-bottom: 0.5rem;
+  }
 
   .drink-row {
     display: flex;

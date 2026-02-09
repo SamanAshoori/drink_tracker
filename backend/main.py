@@ -162,16 +162,47 @@ def get_all_time_stats():
         "total_spent": total_money
     }
 
-@app.get("/api/charts/stacked", response_model=list[dict])
+@app.get("/api/charts/stacked")
 def get_stacked_chart():
-    #fetch history
-    response = supabase.table("consumptions").select("consumed_at, price_paid, drinks(flavour, brands(name))").order("consumed_at").execute()
-
-    #pivot data
-    grouped_data = {}
+    # 1. Fetch all consumptions with drink names and prices
+    response = supabase.table("consumptions") \
+        .select("consumed_at, price_paid, drinks(flavour, brands(name))") \
+        .order("consumed_at") \
+        .execute()
+    
+    # 2. Pivot Data in Python
+    # We want: { "2023-10-27": { "Red Bull": 1.50, "Monster": 0.00 } }
+    grouped = {}
     all_drink_names = set()
 
     for record in response.data:
-        date_str = record["consumed_at"].split("T")[0]
+        # Get Date string (YYYY-MM-DD)
+        date_str = record['consumed_at'].split('T')[0]
+        
+        # Create a combined name "Brand Flavour"
+        b_name = record['drinks']['brands']['name']
+        f_name = record['drinks']['flavour']
+        drink_name = f"{b_name} {f_name}"
+        all_drink_names.add(drink_name)
+        
+        # Get price (handle nulls)
+        price = record['price_paid'] or 0.0
+        
+        # Initialize dictionary for this date
+        if date_str not in grouped:
+            grouped[date_str] = {}
+        
+        # Add price to existing total
+        current_total = grouped[date_str].get(drink_name, 0.0)
+        grouped[date_str][drink_name] = current_total + price
 
-        #create brand + flavour combo
+    # 3. Format for Frontend
+    # Create a list where every date has a key for EVERY drink (filling 0.0 if missing)
+    results = []
+    for date, values in grouped.items():
+        row = {"date": date}
+        for name in all_drink_names:
+            row[name] = values.get(name, 0.0)
+        results.append(row)
+        
+    return results
