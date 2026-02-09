@@ -161,3 +161,17 @@ def get_all_time_stats():
         "drink_count": drink_count,
         "total_spent": total_money
     }
+
+@app.get("/api/charts/stacked", response_model=list[dict])
+def get_stacked_chart():
+    #fetch history
+    response = supabase.table("consumptions").select("consumed_at, price_paid, drinks(flavour, brands(name))").order("consumed_at").execute()
+
+    #pivot data
+    grouped_data = {}
+    all_drink_names = set()
+
+    for record in response.data:
+        date_str = record["consumed_at"].split("T")[0]
+
+        #create brand + flavour combo
