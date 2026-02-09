@@ -46,3 +46,9 @@ class Consumption(ConsumptionBase):
     drink_display_name: str
     class Config:
         from_attributes = True 
+
+class AllTimeStats(BaseModel):
+    total_ml: int
+    total_caffeine: int
+    drink_count: int
+    total_spent: float

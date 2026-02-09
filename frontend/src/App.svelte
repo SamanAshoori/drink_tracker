@@ -5,6 +5,7 @@
   let brands = [];
   let drinks = [];
   let history = [];
+  let stats = { total_ml: 0, total_caffeine: 0, total_count: 0, total_spent: 0.0 };
   
   // Form Data
   let selectedBrandId = "";
@@ -17,6 +18,7 @@
     await loadBrands();
     await loadDrinks();
     await loadHistory();
+    await loadStats();
   });
 
   async function loadBrands() {
@@ -67,10 +69,16 @@
     });
     if (res.ok) {
       await loadHistory();
+      await loadStats(); // Refresh stats
     } else {
       alert("Error logging drink");
     }
     }
+
+  async function loadStats() {
+    const res = await fetch('http://127.0.0.1:8000/api/stats');
+    stats = await res.json();
+  }
 </script>
 
 <main>
@@ -133,6 +141,21 @@
         {/each}
       </ul>
     {/if}
+  </div>
+
+  <div class="card dashboard">
+    <div class="stat">
+      <h3>{stats.total_ml / 1000} L</h3>
+      <p>Liquid Total</p>
+    </div>
+    <div class="stat">
+      <h3>£{stats.total_spent.toFixed(2)}</h3>
+      <p>Money Spent</p>
+    </div>
+    <div class="stat">
+      <h3>{stats.drink_count}</h3>
+      <p>Total Cans</p>
+    </div>
   </div>
 </main>
 

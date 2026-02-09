@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from dotenv import load_dotenv
-from schemas import Brand, Drink, DrinkCreate, consumptionCreate, Consumption
+from schemas import Brand, Drink, DrinkCreate, consumptionCreate, Consumption, AllTimeStats
 
 # load environment variables from .env file
 load_dotenv()
@@ -135,3 +135,29 @@ def get_consumptions():
         results.append(record)
 
     return results
+
+@app.get("/api/stats", response_model=AllTimeStats)
+def get_all_time_stats():
+    response = supabase.table("consumptions").select("price_paid, drinks(size_ml, caffeine_mg)").execute()
+
+    total_vol = 0
+    total_mg = 0
+    total_money = 0
+    drink_count = 0
+
+    for record in response.data:
+        drink = record["drinks"]
+        total_vol += drink["size_ml"]
+        total_mg += drink["caffeine_mg"]
+
+        if record["price_paid"]:
+            total_money += record["price_paid"]
+
+        drink_count += 1
+
+    return{
+        "total_ml": total_vol,
+        "total_caffeine": total_mg,
+        "drink_count": drink_count,
+        "total_spent": total_money
+    }
