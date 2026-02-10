@@ -5,7 +5,7 @@
   let adminPassword = ""; // Session password for logging
 
   onMount(async () => {
-    const res = await fetch('http://127.0.0.1:8000/api/drinks');
+    const res = await fetch('/api/drinks');
     const data = await res.json();
     drinks = data.map(d => ({ ...d, log_price: 0.0 }));
   });
@@ -21,7 +21,7 @@
       price_paid: drink.log_price
     };
     
-    const res = await fetch('http://127.0.0.1:8000/api/consumptions', {
+    const res = await fetch('/api/consumptions', {
       method: 'POST',
       headers: { 
           'Content-Type': 'application/json',

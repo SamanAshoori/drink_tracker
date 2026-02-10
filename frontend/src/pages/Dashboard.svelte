@@ -13,20 +13,20 @@
   });
 
   async function loadStats() {
-    const res = await fetch('http://127.0.0.1:8000/api/stats');
+    const res = await fetch('/api/stats');
     stats = await res.json();
   }
 
   async function loadHistory() {
-    const res = await fetch('http://127.0.0.1:8000/api/consumptions');
+    const res = await fetch('/api/consumptions');
     history = await res.json();
   }
 
   async function loadCharts() {
-    const weekRes = await fetch('http://127.0.0.1:8000/api/charts/weekly');
+    const weekRes = await fetch('/api/charts/weekly');
     weeklyData = await weekRes.json();
     
-    const stackRes = await fetch('http://127.0.0.1:8000/api/charts/stacked');
+    const stackRes = await fetch('/api/charts/stacked');
     stackedData = await stackRes.json();
   }
 </script>

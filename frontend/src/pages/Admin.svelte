@@ -11,7 +11,7 @@
   let caffeinedensity = 32;
 
   onMount(async () => {
-    const res = await fetch('http://127.0.0.1:8000/api/brands');
+    const res = await fetch('/api/brands');
     brands = await res.json();
     if (brands.length > 0) selectedBrandId = brands[0].id;
   });
@@ -24,7 +24,7 @@
       caffeine_per_100ml: caffeinedensity
     };
 
-    const res = await fetch('http://127.0.0.1:8000/api/drinks', {
+    const res = await fetch('/api/drinks', {
       method: 'POST',
       headers: { 
           'Content-Type': 'application/json',
