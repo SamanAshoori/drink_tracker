@@ -4,12 +4,11 @@
   import StackedChart from '../lib/StackedChart.svelte';
 
   let history = [];
-  let stats = { total_ml: 0, total_spent: 0, drink_count: 0 };
-  let weeklyData = [];
+  let stats = { total_ml: 0, total_caffeine: 0, total_spent: 0, drink_count: 0 };
   let stackedData = [];
 
   onMount(async () => {
-    await Promise.all([loadStats(), loadHistory(), loadCharts()]);
+    await Promise.all([loadStats(), loadHistory(), loadStackedChart()]);
   });
 
   async function loadStats() {
@@ -22,10 +21,7 @@
     history = await res.json();
   }
 
-  async function loadCharts() {
-    const weekRes = await fetch('/api/charts/weekly');
-    weeklyData = await weekRes.json();
-    
+  async function loadStackedChart() {
     const stackRes = await fetch('/api/charts/stacked');
     stackedData = await stackRes.json();
   }
@@ -33,8 +29,8 @@
 
 <div class="card dashboard">
   <div class="stat">
-    <h3>{stats.total_ml / 1000} L</h3>
-    <p>Liquid</p>
+    <h3>{(stats.total_caffeine / 1000).toFixed(2)} g</h3>
+    <p>Caffeine</p>
   </div>
   <div class="stat">
     <h3>£{stats.total_spent.toFixed(2)}</h3>
