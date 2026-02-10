@@ -3,6 +3,7 @@
   // Note the new path to lib
   import StackedChart from '../lib/StackedChart.svelte';
   import PieChart from '../lib/PieChart.svelte';
+  import Heatmap from '../lib/Heatmap.svelte';
 
   let history = [];
   let stats = { total_ml: 0, total_caffeine: 0, total_spent: 0, drink_count: 0 };
@@ -65,6 +66,10 @@
     {/if}
   </div>
 </div> 
+
+<div class="card">
+   <Heatmap data={history} />
+</div>  
 
 <div class="card">
   <h2>Recent History</h2>
