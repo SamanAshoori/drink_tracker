@@ -110,4 +110,16 @@
     color: #666;
     justify-content: flex-end;
   }
+
+  .heatmap-container h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem; /* More space */
+  }
+
+  .legend span {
+    display: none; 
+  }
 </style>
