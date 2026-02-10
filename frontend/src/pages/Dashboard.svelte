@@ -56,7 +56,7 @@
       {#each history as entry}
         <li>
           {entry.drink_display_name}
-          <small> - {new Date(entry.consumed_at).toLocaleString()}</small>
+          <small> - {new Date(entry.consumed_at).toLocaleDateString()}</small>
         </li>
       {/each}
     </ul>
