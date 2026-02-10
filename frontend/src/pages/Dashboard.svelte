@@ -2,13 +2,16 @@
   import { onMount } from 'svelte';
   // Note the new path to lib
   import StackedChart from '../lib/StackedChart.svelte';
+  import PieChart from '../lib/PieChart.svelte';
 
   let history = [];
   let stats = { total_ml: 0, total_caffeine: 0, total_spent: 0, drink_count: 0 };
   let stackedData = [];
+  let brandDistributionData = { labels: [], data: [] };
+
 
   onMount(async () => {
-    await Promise.all([loadStats(), loadHistory(), loadStackedChart()]);
+    await Promise.all([loadStats(), loadHistory(), loadStackedChart(), loadBrandDistribution()]);
   });
 
   async function loadStats() {
@@ -25,6 +28,14 @@
     const stackRes = await fetch('/api/charts/stacked');
     stackedData = await stackRes.json();
   }
+
+  async function loadBrandDistribution() {
+    const res = await fetch('/api/charts/brand-distribution');
+    brandDistributionData = await res.json();
+  }
+
+
+  
 </script>
 
 <div class="card dashboard">
@@ -42,10 +53,18 @@
   </div>
 </div>
 
+<div class="grid">
   <div class="card">
     <h2>Spending History</h2>
     {#if stackedData.length > 0} <StackedChart data={stackedData} /> {/if}
   </div>
+  <div class="card">
+    <h2>Brand Distribution</h2>
+    {#if brandDistributionData.labels && brandDistributionData.labels.length > 0}
+      <PieChart data={brandDistributionData} />
+    {/if}
+  </div>
+</div> 
 
 <div class="card">
   <h2>Recent History</h2>
@@ -72,6 +91,6 @@
   li { margin-bottom: 0.5rem; }
   /* Simple grid for charts on larger screens */
   @media (min-width: 768px) {
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
   }
 </style>

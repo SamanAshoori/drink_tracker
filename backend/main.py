@@ -184,17 +184,15 @@ def get_stacked_chart():
     # 2. Pivot Data in Python
     # We want: { "2023-10-27": { "Red Bull": 1.50, "Monster": 0.00 } }
     grouped = {}
-    all_drink_names = set()
+    all_brand_names = set()
 
     for record in response.data:
         # Get Date string (YYYY-MM-DD)
         date_str = record['consumed_at'].split('T')[0]
         
-        # Create a combined name "Brand Flavour"
-        b_name = record['drinks']['brands']['name']
-        f_name = record['drinks']['flavour']
-        drink_name = f"{b_name} {f_name}"
-        all_drink_names.add(drink_name)
+        # Use the brand name for grouping
+        brand_name = record['drinks']['brands']['name']
+        all_brand_names.add(brand_name)
         
         # Get price (handle nulls)
         price = record['price_paid'] or 0.0
@@ -203,18 +201,40 @@ def get_stacked_chart():
         if date_str not in grouped:
             grouped[date_str] = {}
         
-        # Add price to existing total
-        current_total = grouped[date_str].get(drink_name, 0.0)
-        grouped[date_str][drink_name] = current_total + price
+        # Add price to existing total for the brand
+        current_total = grouped[date_str].get(brand_name, 0.0)
+        grouped[date_str][brand_name] = current_total + price
 
     # 3. Format for Frontend
     # Create a list where every date has a key for EVERY drink (filling 0.0 if missing)
     results = []
     for date, values in grouped.items():
         row = {"date": date}
-        for name in all_drink_names:
+        for name in all_brand_names:
             row[name] = values.get(name, 0.0)
         results.append(row)
         
     return results
 
+@app.get("/api/charts/brand-distribution")
+def get_brand_distribution():
+    response = supabase.table("consumptions").select("drinks(brands(name))").execute()
+
+    brand_counts = {}
+    for record in response.data:
+        if record.get("drinks") and record["drinks"].get("brands"):
+            brand_name = record["drinks"]["brands"]["name"]
+            brand_counts[brand_name] = brand_counts.get(brand_name, 0) + 1
+    
+    if not brand_counts:
+        return {"labels": [], "data": []}
+    
+    labels = list(brand_counts.keys())
+    data = list(brand_counts.values())
+
+    return {"labels": labels, "data": data}
+
+
+
+
+    

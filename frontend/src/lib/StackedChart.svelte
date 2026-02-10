@@ -1,21 +1,12 @@
 <script>
     import { onMount } from "svelte";
     import Chart from "chart.js/auto";
+    import { getColorForBrand } from "../../utils/colors.js";
 
     export let data = [];
 
     let canvas;
     let chartInstance;
-
-    // Generate a consistent color from the drink name
-    function stringToColor(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const c = (hash & 0x00ffffff).toString(16).toUpperCase();
-        return "#" + "00000".substring(0, 6 - c.length) + c;
-    }
 
     // Transform backend data to Chart.js format
     function processData(rawData) {
@@ -26,15 +17,15 @@
         // We assume rawData is like [{date: '2023-10-01', RedBull: 1.50}, ...]
         const labels = rawData.map((d) => d.date);
 
-        // 2. Get Drink Names (Keys that are not 'date')
-        // We look at the first row to determine what drinks exist
+        // 2. Get Brand Names (Keys that are not 'date')
+        // We look at the first row to determine what brands exist
         const keys = Object.keys(rawData[0]).filter((k) => k !== "date");
 
         // 3. Create Datasets
         const datasets = keys.map((key) => ({
             label: key,
             data: rawData.map((d) => d[key]),
-            backgroundColor: stringToColor(key),
+            backgroundColor: getColorForBrand(key),
             stack: "Stack 0", // Forces all bars into one column per day
         }));
 
