@@ -91,6 +91,11 @@
   li { margin-bottom: 0.5rem; }
   /* Simple grid for charts on larger screens */
   @media (min-width: 768px) {
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
   }
 </style>
