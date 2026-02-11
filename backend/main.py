@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Header , Depends
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from datetime import date as date_type, timedelta
 from schemas import Brand, Drink, DrinkCreate, consumptionCreate, Consumption, AllTimeStats
 
 # Security Dependency
@@ -173,68 +174,91 @@ def get_all_time_stats():
         "total_spent": total_money
     }
 
+@app.get("/api/stats/daily")
+def get_daily_caffeine_stats(date: date_type):
+    start_date = date
+    end_date = date + timedelta(days=1)
+
+    response = supabase.table("consumptions") \
+        .select("drinks(caffeine_mg)") \
+        .gte("consumed_at", str(start_date)) \
+        .lt("consumed_at", str(end_date)) \
+        .execute()
+
+    total_mg = 0
+    for record in response.data:
+        drink = record.get("drinks")
+        if drink and drink.get("caffeine_mg"):
+            total_mg += drink["caffeine_mg"]
+
+    return total_mg
+
 @app.get("/api/charts/stacked")
-def get_stacked_chart():
-    # 1. Fetch all consumptions with drink names and prices
+def get_stacked_chart(group_by: str = "brand"):
+    # 1. Fetch data including BOTH flavour and brand name
     response = supabase.table("consumptions") \
         .select("consumed_at, price_paid, drinks(flavour, brands(name))") \
         .order("consumed_at") \
         .execute()
     
-    # 2. Pivot Data in Python
-    # We want: { "2023-10-27": { "Red Bull": 1.50, "Monster": 0.00 } }
+    # 2. Pivot Data
     grouped = {}
-    all_brand_names = set()
+    all_keys = set()
 
     for record in response.data:
-        # Get Date string (YYYY-MM-DD)
         date_str = record['consumed_at'].split('T')[0]
         
-        # Use the brand name for grouping
-        brand_name = record['drinks']['brands']['name']
-        all_brand_names.add(brand_name)
+        # DYNAMIC KEY SELECTION
+        if group_by == "flavour":
+            key_name = record['drinks']['flavour']
+        else:
+            key_name = record['drinks']['brands']['name']
+            
+        all_keys.add(key_name)
         
-        # Get price (handle nulls)
         price = record['price_paid'] or 0.0
         
-        # Initialize dictionary for this date
         if date_str not in grouped:
             grouped[date_str] = {}
         
-        # Add price to existing total for the brand
-        current_total = grouped[date_str].get(brand_name, 0.0)
-        grouped[date_str][brand_name] = current_total + price
+        current_total = grouped[date_str].get(key_name, 0.0)
+        grouped[date_str][key_name] = current_total + price
 
     # 3. Format for Frontend
-    # Create a list where every date has a key for EVERY drink (filling 0.0 if missing)
     results = []
     for date, values in grouped.items():
         row = {"date": date}
-        for name in all_brand_names:
-            row[name] = values.get(name, 0.0)
+        for k in all_keys:
+            row[k] = values.get(k, 0.0)
         results.append(row)
         
     return results
 
 @app.get("/api/charts/brand-distribution")
-def get_brand_distribution():
-    response = supabase.table("consumptions").select("drinks(brands(name))").execute()
+def get_brand_distribution(group_by: str = "brand"):
+    # Fetch drinks and brands to handle both cases
+    response = supabase.table("consumptions").select("drinks(flavour, brands(name))").execute()
 
-    brand_counts = {}
+    counts = {}
     for record in response.data:
-        if record.get("drinks") and record["drinks"].get("brands"):
-            brand_name = record["drinks"]["brands"]["name"]
-            brand_counts[brand_name] = brand_counts.get(brand_name, 0) + 1
+        drink = record.get("drinks")
+        if not drink: 
+            continue
+            
+        # DYNAMIC KEY SELECTION
+        if group_by == "flavour":
+            key = drink.get("flavour", "Unknown")
+        else:
+            # Safely get brand name
+            brand = drink.get("brands")
+            key = brand.get("name", "Unknown") if brand else "Unknown"
+            
+        counts[key] = counts.get(key, 0) + 1
     
-    if not brand_counts:
+    if not counts:
         return {"labels": [], "data": []}
     
-    labels = list(brand_counts.keys())
-    data = list(brand_counts.values())
+    labels = list(counts.keys())
+    data = list(counts.values())
 
     return {"labels": labels, "data": data}
-
-
-
-
-    

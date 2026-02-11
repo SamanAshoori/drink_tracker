@@ -13,7 +13,6 @@
 </script>
 
 <main>
-  <h1>Drink Tracker</h1>
   
   <Navbar currentPage={page} on:route={handleRoute} />
 

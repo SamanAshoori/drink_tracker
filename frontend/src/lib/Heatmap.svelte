@@ -65,7 +65,7 @@
 
 <style>
   :root {
-  --color-level-0: #000000; /* Black (Empty) */
+  --color-level-0: #222222; /* Black (Empty) */
   --color-level-1: #0e4429; /* Dim Forest */
   --color-level-2: #006d32; /* Standard Green */
   --color-level-3: #26a641; /* Apple Green */
