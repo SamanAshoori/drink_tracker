@@ -132,9 +132,26 @@ def log_consumption(consumption: consumptionCreate):
 
     return new_consumption
 
+@app.get("/api/consumptions/top_10", response_model=list[Consumption])
+def get_consumptions_limited():
+    limit = 10
+    result = supabase.table("consumptions").select("*, drinks(*, brands(name))").order("consumed_at", desc=True).limit(limit).execute()
+
+    results = []
+    for record in result.data:
+        drink = record["drinks"]
+        brand_name = drink["brands"]
+
+        display_name = f"{brand_name['name']} {drink['flavour']} {drink['size_ml']}ml"
+        record["drink_display_name"] = display_name
+
+        results.append(record)
+
+    return results
+
 @app.get("/api/consumptions", response_model=list[Consumption])
 def get_consumptions():
-    result = supabase.table("consumptions").select("*, drinks(*, brands(name))").order("consumed_at", desc=True).limit(10).execute()
+    result = supabase.table("consumptions").select("*, drinks(*, brands(name))").order("consumed_at", desc=True).execute()
 
     results = []
     for record in result.data:

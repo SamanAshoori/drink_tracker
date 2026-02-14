@@ -5,6 +5,7 @@
   import Heatmap from '../lib/Heatmap.svelte';
 
   let history = [];
+  let all_history = []
   let stats = { total_ml: 0, total_caffeine: 0, total_spent: 0, drink_count: 0 };
   let stackedData = [];
   let brandDistributionData = { labels: [], data: [] };
@@ -16,14 +17,14 @@
 
   onMount(async () => {
     // Pass selectedDate to get the initial daily caffeine amount
-    await Promise.all([loadStats(), loadHistory(), getDailyCaffeine(selectedDate)]);
+    await Promise.all([loadStats(), loadHistory(), getDailyCaffeine(selectedDate),loadAllHistory()]);
     // Load dynamic charts
     await refreshCharts();
   });
 
   async function refreshCharts(){
     // FIX: Using backticks (`) for string interpolation
-    await Promise.all([loadStackedChart(), loadBrandDistribution()]);
+    await Promise.all([loadStackedChart(), loadBrandDistribution(), loadAllHistory()]);
   }
 
   async function toggleGroup(newValue){
@@ -57,8 +58,13 @@
   $: isOverLimit = daily_caffine > 400;
 
   async function loadHistory() {
-    const res = await fetch('/api/consumptions');
+    const res = await fetch('/api/consumptions/top_10');
     history = await res.json();
+  }
+
+  async function loadAllHistory() {
+    const res = await fetch('/api/consumptions');
+    all_history = await res.json();
   }
 
   async function loadStackedChart() {
@@ -142,7 +148,7 @@
   </div>
 
   <div class="card heatmap-container">
-    <Heatmap data={history} />
+    <Heatmap data={all_history} />
   </div>  
 
   <div class="card history-card">
