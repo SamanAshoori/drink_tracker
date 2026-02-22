@@ -8,25 +8,56 @@
     let canvas;
     let chartInstance;
 
+    // Helper to get the start of the week (Sunday) for a given date string
+    function getWeekStartDate(dateString) {
+        const date = new Date(dateString);
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        return new Date(date.setDate(diff)).toISOString().split("T")[0];
+    }
+
     // Transform backend data to Chart.js format
     function processData(rawData) {
         if (!rawData || rawData.length === 0)
             return { labels: [], datasets: [] };
 
-        // 1. Get Dates (X Axis)
-        // We assume rawData is like [{date: '2023-10-01', RedBull: 1.50}, ...]
-        const labels = rawData.map((d) => d.date);
+        const weeklyData = {};
 
-        // 2. Get Brand Names (Keys that are not 'date')
-        // We look at the first row to determine what brands exist
-        const keys = Object.keys(rawData[0]).filter((k) => k !== "date");
+        // 1. Group by Week
+        rawData.forEach((dailyEntry) => {
+            const weekStart = getWeekStartDate(dailyEntry.date);
+            if (!weeklyData[weekStart]) {
+                weeklyData[weekStart] = { date: weekStart };
+            }
 
-        // 3. Create Datasets
+            Object.keys(dailyEntry).forEach((key) => {
+                if (key !== "date") {
+                    if (!weeklyData[weekStart][key]) {
+                        weeklyData[weekStart][key] = 0;
+                    }
+                    weeklyData[weekStart][key] += dailyEntry[key];
+                }
+            });
+        });
+
+        const chartData = Object.values(weeklyData).sort(
+            (a, b) => new Date(a.date) - new Date(b.date)
+        );
+
+        // 2. Get Dates (X Axis)
+        const labels = chartData.map((d) => d.date);
+
+        // 3. Get Brand Names
+        const keys = Object.keys(
+            chartData.reduce((acc, curr) => ({ ...acc, ...curr }), {})
+        ).filter((k) => k !== "date");
+
+        // 4. Create Datasets
         const datasets = keys.map((key) => ({
             label: key,
-            data: rawData.map((d) => d[key]),
+            data: chartData.map((d) => d[key] || 0), // Use 0 if a brand isn't in a week
             backgroundColor: getColorForBrand(key),
-            stack: "Stack 0", // Forces all bars into one column per day
+            stack: "Stack 0",
         }));
 
         return { labels, datasets };
@@ -87,7 +118,7 @@
                                     sum += tooltipItem.parsed.y;
                                 });
 
-                                return "Day Total: £" + sum.toFixed(2);
+                                return "Week Total: £" + sum.toFixed(2);
                             },
                         },
                     },
