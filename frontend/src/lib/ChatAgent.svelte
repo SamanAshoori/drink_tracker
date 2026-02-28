@@ -107,8 +107,8 @@
 {#if isOpen}
   <div class="panel">
     <div class="panel-header">
-      <span class="panel-title">Ask your data</span>
-      <span class="panel-sub">Powered by Gemini</span>
+      <span class="panel-title">Ask the data</span>
+      <span class="panel-sub">Powered by AI</span>
     </div>
 
     <div class="messages" bind:this={messagesEl}>
