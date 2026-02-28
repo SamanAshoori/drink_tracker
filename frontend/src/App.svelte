@@ -3,6 +3,7 @@
   import Dashboard from './pages/Dashboard.svelte';
   import Logger from './pages/Logger.svelte';
   import Admin from './pages/Admin.svelte';
+  import ChatAgent from './lib/ChatAgent.svelte';
 
   // Default Page
   let page = 'dashboard';
@@ -24,6 +25,8 @@
     <Admin />
   {/if}
 </main>
+
+<ChatAgent />
 
 <style>
   main { max-width: 800px; margin: 0 auto; padding: 2rem; font-family: sans-serif; }

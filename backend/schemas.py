@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
@@ -52,4 +52,15 @@ class AllTimeStats(BaseModel):
     total_caffeine: int
     drink_count: int
     total_spent: float
+
+class ChatRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=500)
+
+class ChatResponse(BaseModel):
+    type: str          # "text" or "chart"
+    answer: str | None = None
+    chart_type: str | None = None
+    title: str | None = None
+    labels: list[str] | None = None
+    data: list[float] | None = None
 

@@ -1,10 +1,17 @@
 import os
-from fastapi import FastAPI, HTTPException, Header , Depends
+import json
+from fastapi import FastAPI, HTTPException, Header, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from starlette.responses import JSONResponse
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from datetime import date as date_type, timedelta
-from schemas import Brand, Drink, DrinkCreate, consumptionCreate, Consumption, AllTimeStats
+import google.generativeai as genai
+from schemas import Brand, Drink, DrinkCreate, consumptionCreate, Consumption, AllTimeStats, ChatRequest, ChatResponse
 
 # Security Dependency
 def verify_admin(x_admin_key: str = Header(default=None)):
@@ -31,8 +38,22 @@ if not url or not key:
 #create supabase client
 supabase: Client = create_client(url, key)
 
+# Gemini config
+gemini_key = os.environ.get("GEMINI_API_KEY")
+if gemini_key:
+    genai.configure(api_key=gemini_key)
+
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI()
 
+app.state.limiter = limiter
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(status_code=429, content={"detail": "Too many requests. Slow down."})
+
+app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -279,3 +300,65 @@ def get_brand_distribution(group_by: str = "brand"):
     data = list(counts.values())
 
     return {"labels": labels, "data": data}
+
+SYSTEM_PROMPT = """You are an analyst for a personal energy drink tracker app.
+You will be given a JSON array of the user's drink consumption history and a question about it.
+Answer the question using only the data provided.
+
+You MUST respond with valid JSON only — no markdown, no extra text.
+
+If the answer is best expressed as text, respond with:
+{"type": "text", "answer": "your answer here"}
+
+If the answer is best expressed as a chart, respond with:
+{"type": "chart", "chart_type": "bar", "title": "chart title", "labels": ["label1", "label2"], "data": [10, 20]}
+
+Use "bar" for comparisons (days of week, brands, etc.) and "pie" for distributions.
+Keep answers concise and friendly."""
+
+@app.post("/api/chat", response_model=ChatResponse)
+@limiter.limit("5/minute;20/hour")
+def chat(request: ChatRequest, req: Request):
+    if not gemini_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
+
+    # Fetch all consumptions with drink and brand info
+    result = supabase.table("consumptions") \
+        .select("consumed_at, price_paid, drinks(flavour, caffeine_mg, size_ml, brands(name))") \
+        .order("consumed_at") \
+        .execute()
+
+    # Build a compact context array for the model
+    context = []
+    days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+    for record in result.data:
+        drink = record.get("drinks") or {}
+        brand = (drink.get("brands") or {}).get("name", "Unknown")
+        dt = record["consumed_at"].split("T")[0]
+        dow = days[date_type.fromisoformat(dt).weekday()]
+        context.append({
+            "date": dt,
+            "day_of_week": dow,
+            "drink": f"{brand} {drink.get('flavour','')}".strip(),
+            "size_ml": drink.get("size_ml"),
+            "caffeine_mg": drink.get("caffeine_mg"),
+            "price_paid": record.get("price_paid") or 0.0
+        })
+
+    prompt = f"""Consumption data (JSON):
+{json.dumps(context, indent=2)}
+
+User question: {request.question}"""
+
+    model = genai.GenerativeModel(
+        model_name="gemini-3-flash-preview",
+        generation_config={"response_mime_type": "application/json"}
+    )
+    response = model.generate_content([SYSTEM_PROMPT, prompt])
+
+    try:
+        parsed = json.loads(response.text)
+    except Exception:
+        parsed = {"type": "text", "answer": response.text}
+
+    return parsed
