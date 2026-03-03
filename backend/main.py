@@ -1,12 +1,7 @@
 import os
 import json
-from fastapi import FastAPI, HTTPException, Header, Depends, Request
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-from starlette.responses import JSONResponse
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from datetime import date as date_type, timedelta
@@ -43,17 +38,8 @@ gemini_key = os.environ.get("GEMINI_API_KEY")
 if gemini_key:
     genai.configure(api_key=gemini_key)
 
-limiter = Limiter(key_func=get_remote_address)
-
 app = FastAPI()
 
-app.state.limiter = limiter
-
-@app.exception_handler(RateLimitExceeded)
-async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
-    return JSONResponse(status_code=429, content={"detail": "Too many requests. Slow down."})
-
-app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -317,8 +303,7 @@ Use "bar" for comparisons (days of week, brands, etc.) and "pie" for distributio
 Keep answers concise and friendly."""
 
 @app.post("/api/chat", response_model=ChatResponse)
-@limiter.limit("5/minute;20/hour")
-def chat(request: ChatRequest, req: Request):
+def chat(request: ChatRequest):
     if not gemini_key:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
 
