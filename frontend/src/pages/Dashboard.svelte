@@ -6,7 +6,7 @@
 
   let history = [];
   let all_history = []
-  let stats = { total_ml: 0, total_caffeine: 0, total_spent: 0, drink_count: 0 };
+  let stats = { total_ml: 0, total_caffeine: 0, total_spent: 0, drink_count: 0, avg_price:0 };
   let stackedData = [];
   let brandDistributionData = { labels: [], data: [] };
   let daily_caffine = 0;
@@ -97,6 +97,10 @@
     <div class="card stat-card">
       <h3 class="stat-number">{stats.drink_count}</h3>
       <p>Cans</p>
+    </div>
+    <div class="card stat-card">
+      <h3 class="stat-number">£{stats.avg_price.toFixed(2)}</h3>
+      <p>Avg Price</p>
     </div>
   </div>
 

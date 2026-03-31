@@ -173,6 +173,8 @@ def get_all_time_stats():
     total_mg = 0
     total_money = 0
     drink_count = 0
+    avg_price = 0
+    paid_count = 0
 
     for record in response.data:
         drink = record["drinks"]
@@ -181,14 +183,18 @@ def get_all_time_stats():
 
         if record["price_paid"]:
             total_money += record["price_paid"]
+            paid_count += 1
 
         drink_count += 1
+    avg_price = total_money / paid_count if paid_count > 0 else 0
+
 
     return{
         "total_ml": total_vol,
         "total_caffeine": total_mg,
         "drink_count": drink_count,
-        "total_spent": total_money
+        "total_spent": total_money,
+        "avg_price": avg_price
     }
 
 @app.get("/api/stats/daily")

@@ -52,4 +52,5 @@ class AllTimeStats(BaseModel):
     total_caffeine: int
     drink_count: int
     total_spent: float
+    avg_price: float
 
