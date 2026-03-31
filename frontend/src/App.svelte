@@ -12,10 +12,9 @@
   }
 </script>
 
-<main>
-  
-  <Navbar currentPage={page} on:route={handleRoute} />
+<Navbar currentPage={page} on:route={handleRoute} />
 
+<div class="page-content">
   {#if page === 'dashboard'}
     <Dashboard />
   {:else if page === 'logger'}
@@ -23,9 +22,10 @@
   {:else if page === 'admin'}
     <Admin />
   {/if}
-</main>
+</div>
 
 <style>
-  main { max-width: 800px; margin: 0 auto; padding: 2rem; font-family: sans-serif; }
-  h1 { text-align: center; margin-bottom: 2rem; }
+  .page-content {
+    width: 100%;
+  }
 </style>

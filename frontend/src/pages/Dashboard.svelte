@@ -175,20 +175,20 @@
 <style>
   /* --- LAYOUT --- */
   main {
-    max-width: 900px;
-    margin: 4rem auto;
-    padding: 0 1.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
   }
 
   header {
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
     border-bottom: 1px solid #222;
     padding-bottom: 1rem;
   }
 
   /* --- TYPOGRAPHY --- */
   h1 {
-    font-size: 2rem;
+    font-size: clamp(1.4rem, 4vw, 2rem);
     color: white;
   }
 
@@ -219,14 +219,13 @@
 
   /* --- KPI STATS --- */
   .stats-row {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
-    margin-bottom: 3rem; /* More space before charts */
+    margin-bottom: 2.5rem;
   }
 
   .stat-card {
-    flex: 1;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -242,7 +241,7 @@
   }
 
   .stat-number {
-    font-size: 2rem;
+    font-size: clamp(1.2rem, 2.5vw, 2rem);
     color: white;
     margin: 0 0 0.5rem 0;
   }
@@ -258,6 +257,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
 
   .toggle-pill {
@@ -335,10 +336,27 @@
     font-size: 0.9rem;
   }
 
-  /* --- MOBILE --- */
-  @media (max-width: 600px) {
+  /* --- RESPONSIVE --- */
+  @media (max-width: 700px) {
     .charts-grid {
       grid-template-columns: 1fr;
+    }
+    .controls-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .stats-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 500px) {
+    main {
+      padding: 1.25rem 1rem;
     }
   }
 

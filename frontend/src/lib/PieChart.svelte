@@ -29,6 +29,7 @@
 
     onMount(() => {
         const ctx = canvas.getContext("2d");
+        const container = canvas.parentElement;
 
         chartInstance = new Chart(ctx, {
             type: "pie",
@@ -44,7 +45,13 @@
             },
         });
 
+        const observer = new ResizeObserver(() => {
+            if (chartInstance) chartInstance.resize();
+        });
+        observer.observe(container);
+
         return () => {
+            observer.disconnect();
             if (chartInstance) chartInstance.destroy();
         };
     });

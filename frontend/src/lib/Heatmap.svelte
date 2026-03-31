@@ -96,6 +96,7 @@
   .heatmap-content {
     display: flex;
     gap: 5px;
+    justify-content: center;
   }
 
   .day-labels {
@@ -117,7 +118,6 @@
 
   .graph-wrapper {
     overflow-x: auto;
-    flex: 1;
   }
 
   .graph {
@@ -154,7 +154,7 @@
     margin-top: 10px;
     font-size: 0.8rem;
     color: #666;
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .heatmap-container h2 {
